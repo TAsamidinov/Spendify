@@ -1,9 +1,9 @@
-import { Metadata } from 'next';
+import { CalendarComponent } from "@/components/calendar-component"
 
-export const metadata: Metadata = {
-  title: 'Календар',
-};
-
-export default function Customers() {
-    return <p>Calendar Page</p>;
+export default function Page() {
+  return (
+    <div className="flex justify-center pt-6">
+      <CalendarComponent />
+    </div>
+  )
 }

@@ -104,7 +104,7 @@ const items2 = [
   },
 ];
 
-export function AppSidebar() {
+export function SidebarComponent() {
   return (
     <Sidebar>
       <SidebarContent className="mt-2">
