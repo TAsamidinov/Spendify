@@ -37,69 +37,69 @@ const SIDEBAR_WIDTH_MOBILE = "10rem";
 const items1 = [
   {
     title: "Календар",
-    url: "#",
+    url: "/dashboard/calendar",
     icon: Calendar,
   },
   {
     title: "Статистика",
-    url: "#",
+    url: "/dashboard/statistics",
     icon: ChartNoAxesCombined,
   },
 ];
 const items2 = [
   {
     title: "Ресторан",
-    url: "#",
+    url: "/dashboard/restoran",
     icon: Landmark,
   },
   {
     title: "Чайкана",
-    url: "#",
+    url: "/dashboard/cafe",
     icon: Store,
   },
   {
     title: "Баня",
-    url: "#",
+    url: "/dashboard/spa",
     icon: School,
   },
   {
     title: "Баня-Товар",
-    url: "#",
+    url: "/dashboard/drinks",
     icon: CupSoda,
   },
   {
     title: "Пескоблок",
-    url: "#",
+    url: "/dashboard/factory",
     icon: Cuboid,
   },
   {
     title: "Пилорама",
-    url: "#",
+    url: "/dashboard/cutter",
     icon: TableRowsSplit,
   },
   {
     title: "Тегирмен",
-    url: "#",
+    url: "/dashboard/mill",
     icon: Factory,
   },
   {
     title: "Алма",
-    url: "#",
+    url: "/dashboard/apple",
     icon: Apple,
   },
   {
     title: "Ун",
-    url: "#",
+    url: "flour",
     icon: TableCellsSplit,
   },
   {
     title: "Май",
-    url: "#",
+    url: "oil",
     icon: Amphora,
   },
   {
     title: "Гуруч",
-    url: "#",
+    url: "rice",
     icon: CirclePercent,
   },
 ];
