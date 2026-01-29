@@ -1,9 +1,5 @@
 import {
   Calendar,
-  Home,
-  Inbox,
-  Search,
-  Settings,
   Landmark,
   Store,
   School,
@@ -16,7 +12,7 @@ import {
   Amphora,
   CirclePercent,
   LogOut,
-  UserRoundPen,
+  ChartNoAxesCombined,
 } from "lucide-react";
 import {
   Sidebar,
@@ -43,6 +39,11 @@ const items1 = [
     title: "Календар",
     url: "#",
     icon: Calendar,
+  },
+  {
+    title: "Статистика",
+    url: "#",
+    icon: ChartNoAxesCombined,
   },
 ];
 const items2 = [
@@ -106,16 +107,7 @@ const items2 = [
 export function AppSidebar() {
   return (
     <Sidebar>
-      <SidebarHeader className="p-0">
-        <div className="flex items-center justify-between px-1 py-2">
-          Финансы
-          <SidebarTrigger  />
-        </div>
-      </SidebarHeader>
-
-      <SidebarSeparator />
-
-      <SidebarContent>
+      <SidebarContent className="mt-2">
         <SidebarGroupLabel>Башкы</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
@@ -131,9 +123,10 @@ export function AppSidebar() {
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
-          
+
           <SidebarSeparator />
 
+          <SidebarGroupLabel>Бизнес</SidebarGroupLabel>
           <SidebarMenu>
             {items2.map((item) => (
               <SidebarMenuItem key={item.title}>
@@ -143,19 +136,24 @@ export function AppSidebar() {
                     <span>{item.title}</span>
                   </a>
                 </SidebarMenuButton>
+                <SidebarMenuBadge>7</SidebarMenuBadge>
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
+
+          {/* <SidebarSeparator /> */}
         </SidebarGroupContent>
       </SidebarContent>
 
-      <SidebarSeparator />
-      
-      <SidebarFooter className="p-0">
-        <div className="flex items-center  gap-2 px-2 py-2">
-          <LogOut className="h-4 w-4" />
-          <span>Чыгуу</span>
-        </div>
+      <SidebarFooter>
+        <SidebarSeparator />
+
+        <SidebarMenuItem>
+          <div className="flex items-center gap-2 px-2 mb-4">
+            <LogOut className="h-4 w-4" />
+            <span>Чыгуу</span>
+          </div>
+        </SidebarMenuItem>
       </SidebarFooter>
     </Sidebar>
   );
