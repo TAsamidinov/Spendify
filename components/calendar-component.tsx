@@ -6,7 +6,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { addDays, format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { DialogComponent } from "./dialog-component";
+import { DialogCreateToi } from "./dialog-component";
 
 export function CalendarComponent() {
   const [date, setDate] = React.useState<Date | undefined>(
@@ -78,7 +78,7 @@ export function CalendarComponent() {
           ))}
         </CardFooter>
       </Card>
-      <DialogComponent open={open} setOpen={setOpen} date={date} />
+      <DialogCreateToi open={open} setOpen={setOpen} date={date} />
     </>
   );
 }

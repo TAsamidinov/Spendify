@@ -6,8 +6,10 @@ import { addDays, format } from "date-fns";
 import { ru } from "date-fns/locale";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -47,7 +49,7 @@ const emptyForm: EventForm = {
   sany: "",
 };
 
-export function DialogComponent({
+export function DialogCreateToi({
   open,
   setOpen,
   date,
@@ -203,6 +205,21 @@ export function DialogComponent({
             />
           </div>
         </div>
+        <DialogFooter className="gap-2">
+          <DialogClose asChild>
+            <Button variant="outline">Close</Button>
+          </DialogClose>
+
+          <DialogClose asChild>
+            <Button
+              onClick={() => {
+                console.log("SAVE");
+              }}
+            >
+              Save
+            </Button>
+          </DialogClose>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
