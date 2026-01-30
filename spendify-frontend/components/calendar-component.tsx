@@ -6,7 +6,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { addDays, format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { DialogCreateToi } from "./dialog-component";
+import { AddEventDialog } from "./add-event-dialog";
 import { EventDetailDialog } from "./event-detail-dialog";
 import { EventsListDialog } from "./events-list-dialog";
 type EventDTO = {
@@ -49,7 +49,7 @@ export function CalendarComponent() {
   const [currentMonth, setCurrentMonth] = React.useState<Date>(
     new Date(new Date().getFullYear(), new Date().getMonth(), 1)
   );
-
+  const [openCreate, setOpenCreate] = React.useState(false);
   const bookedDates = React.useMemo(
     () =>
       Array.from(
@@ -108,7 +108,10 @@ export function CalendarComponent() {
           date={date}
           events={events}
           onPickEvent={(ev) => openEventDetails(ev)}
-          onRefresh={refreshDay}
+          onAddEvent={() => {
+            setOpenList(false); // close list
+            setOpenCreate(true); // open create dialog
+          }}
         />
 
         {/* Dialog #2: Details */}
@@ -116,6 +119,7 @@ export function CalendarComponent() {
           open={openDetail}
           setOpen={setOpenDetail}
           event={selectedEvent}
+          date={date}
           onUpdated={async (updated) => {
             // update selected + refresh list
             setSelectedEvent(updated);
@@ -148,11 +152,15 @@ export function CalendarComponent() {
           ))}
         </CardFooter>
       </Card>
-      <DialogCreateToi
-        open={open}
-        setOpen={setOpen}
+
+      <AddEventDialog
+        open={openCreate}
+        setOpen={setOpenCreate} 
         date={date}
-        eventData={eventData}
+        onCreated={() => {
+          // optional: refresh events list for this day
+          openForDate(date!); // or call your fetchEventsByDate()
+        }}
       />
     </>
   );

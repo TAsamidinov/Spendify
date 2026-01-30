@@ -34,16 +34,18 @@ export function EventsListDialog({
   date,
   events,
   onPickEvent,
-  onRefresh,
+  onAddEvent,
 }: {
   open: boolean;
   setOpen: (v: boolean) => void;
   date: Date | undefined;
   events: EventDTO[];
   onPickEvent: (ev: EventDTO) => void;
-  onRefresh: () => Promise<void>;
+  onAddEvent: () => void;
 }) {
-  const dateLabel = date ? format(date, "d LLLL, yyyy", { locale: ru }) : "Дата";
+  const dateLabel = date
+    ? format(date, "d LLLL, yyyy", { locale: ru })
+    : "Дата";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -80,13 +82,10 @@ export function EventsListDialog({
 
         <DialogFooter className="gap-2">
           <DialogClose asChild>
-            <Button variant="outline">Close</Button>
+            <Button variant="outline">Жабуу</Button>
           </DialogClose>
 
-          {/* Optional: refresh button if you want */}
-          <Button variant="secondary" onClick={onRefresh}>
-            Refresh
-          </Button>
+          <Button onClick={onAddEvent}>Жаңы той кошуу</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

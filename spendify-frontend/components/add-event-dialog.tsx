@@ -28,13 +28,10 @@ type EventForm = {
   name: string;
   type: string;
   guests: string;
-
   totalAmount: string;
   deposit: string;
-
   smokeService: string;
   bannerService: string;
-
   phone: string;
   notes: string;
 };
@@ -51,32 +48,25 @@ const emptyForm: EventForm = {
   notes: "",
 };
 
-export function DialogCreateToi({ open, setOpen, date, eventData }: any) {
+export function AddEventDialog({
+  open,
+  setOpen,
+  date,
+  onCreated,
+}: {
+  open: boolean;
+  setOpen: (v: boolean) => void;
+  date: Date | undefined;
+  onCreated?: (created: any) => void;
+}) {
   const [form, setForm] = React.useState<EventForm>(emptyForm);
   const [saving, setSaving] = React.useState(false);
 
-  // ✅ LOAD existing event into the form when dialog opens / eventData changes
+  // ✅ reset form each time dialog opens
   React.useEffect(() => {
     if (!open) return;
-
-    if (!eventData) {
-      setForm(emptyForm);
-      return;
-    }
-    console.log("Dialog got eventData:", eventData) // ✅ debug
-
-    setForm({
-      name: eventData.name ?? "",
-      type: eventData.type ?? "",
-      guests: eventData.guests?.toString() ?? "",
-      totalAmount: eventData.total_amount?.toString() ?? "",
-      deposit: eventData.deposit?.toString() ?? "",
-      smokeService: eventData.smoke_service?.toString() ?? "",
-      bannerService: eventData.banner_service?.toString() ?? "",
-      phone: eventData.phone ?? "",
-      notes: eventData.notes ?? "",
-    });
-  }, [eventData, open]);
+    setForm(emptyForm);
+  }, [open]);
 
   async function onSave() {
     if (!date) return;
@@ -96,7 +86,7 @@ export function DialogCreateToi({ open, setOpen, date, eventData }: any) {
 
     setSaving(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/events/save/", {
+      const res = await fetch("http://127.0.0.1:8000/api/events/create/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -106,6 +96,9 @@ export function DialogCreateToi({ open, setOpen, date, eventData }: any) {
         console.error("Save failed", await res.text());
         return;
       }
+
+      const created = await res.json();
+      onCreated?.(created);
 
       setOpen(false);
       setForm(emptyForm);
@@ -124,7 +117,6 @@ export function DialogCreateToi({ open, setOpen, date, eventData }: any) {
         </DialogHeader>
 
         <div className="grid gap-4">
-          {/* ФИО */}
           <div className="grid gap-2">
             <Label htmlFor="name">ФИО</Label>
             <Input
@@ -136,7 +128,6 @@ export function DialogCreateToi({ open, setOpen, date, eventData }: any) {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            {/* Тойдун түрү */}
             <div className="grid gap-2">
               <Label>Тойдун түрү</Label>
               <Select
@@ -157,7 +148,6 @@ export function DialogCreateToi({ open, setOpen, date, eventData }: any) {
               </Select>
             </div>
 
-            {/* Адам саны */}
             <div className="grid gap-2">
               <Label htmlFor="guests">Адам саны</Label>
               <Input
@@ -165,15 +155,12 @@ export function DialogCreateToi({ open, setOpen, date, eventData }: any) {
                 inputMode="numeric"
                 placeholder="250"
                 value={form.guests}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, guests: e.target.value }))
-                }
+                onChange={(e) => setForm((p) => ({ ...p, guests: e.target.value }))}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            {/* Акчасы */}
             <div className="grid gap-2">
               <Label htmlFor="total">Акчасы</Label>
               <Input
@@ -187,7 +174,6 @@ export function DialogCreateToi({ open, setOpen, date, eventData }: any) {
               />
             </div>
 
-            {/* Заклад */}
             <div className="grid gap-2">
               <Label htmlFor="deposit">Заклад</Label>
               <Input
@@ -195,15 +181,12 @@ export function DialogCreateToi({ open, setOpen, date, eventData }: any) {
                 inputMode="numeric"
                 placeholder="5000"
                 value={form.deposit}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, deposit: e.target.value }))
-                }
+                onChange={(e) => setForm((p) => ({ ...p, deposit: e.target.value }))}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            {/* Дым */}
             <div className="grid gap-2">
               <Label htmlFor="smoke">Дым</Label>
               <Input
@@ -217,7 +200,6 @@ export function DialogCreateToi({ open, setOpen, date, eventData }: any) {
               />
             </div>
 
-            {/* Банер */}
             <div className="grid gap-2">
               <Label htmlFor="banner">Банер</Label>
               <Input
@@ -232,29 +214,23 @@ export function DialogCreateToi({ open, setOpen, date, eventData }: any) {
             </div>
           </div>
 
-          {/* Номери */}
           <div className="grid gap-2">
             <Label htmlFor="phone">Номери</Label>
             <Input
               id="phone"
               placeholder="0 XXX XXX XXX"
               value={form.phone}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, phone: e.target.value }))
-              }
+              onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
             />
           </div>
 
-          {/* Эскертүү */}
           <div className="grid gap-2">
             <Label htmlFor="notes">Эскертүү</Label>
             <Textarea
               id="notes"
               placeholder="Мисалы: саат 12 башталат, тамак бизден..."
               value={form.notes}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, notes: e.target.value }))
-              }
+              onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
             />
           </div>
         </div>
