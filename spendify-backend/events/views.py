@@ -1,3 +1,5 @@
+from datetime import timedelta
+from django.utils import timezone
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -57,3 +59,9 @@ def create_event(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=400)
+
+@api_view(["GET"])
+def future_events_count(request):
+    tomorrow = timezone.localdate() + timedelta(days=1)
+    count = Event.objects.filter(date__gte=tomorrow).count()
+    return Response({"count": count})

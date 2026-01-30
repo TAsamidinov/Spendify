@@ -1,3 +1,5 @@
+"use client"
+
 import {
   Calendar,
   Landmark,
@@ -29,6 +31,7 @@ import {
   SidebarSeparator,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import React from "react";
 
 const SIDEBAR_WIDTH = "10rem";
 const SIDEBAR_WIDTH_MOBILE = "10rem";
@@ -105,6 +108,31 @@ const items2 = [
 ];
 
 export function SidebarComponent() {
+  const [futureEventsCount, setFutureEventsCount] = React.useState<number>(0);
+
+  React.useEffect(() => {
+    let alive = true;
+
+    async function loadCount() {
+      try {
+        const res = await fetch(
+          "http://127.0.0.1:8000/api/events/future-count/"
+        );
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (alive) setFutureEventsCount(Number(data.count || 0));
+      } catch (e) {
+        console.error("future-count failed", e);
+      }
+    }
+
+    loadCount();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   return (
     <Sidebar>
       <SidebarContent className="mt-2">
@@ -119,7 +147,9 @@ export function SidebarComponent() {
                     <span>{item.title}</span>
                   </a>
                 </SidebarMenuButton>
-                <SidebarMenuBadge>24</SidebarMenuBadge>
+                {item.title === "Календар" && (
+                  <SidebarMenuBadge>{futureEventsCount}</SidebarMenuBadge>
+                )}
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
