@@ -74,7 +74,7 @@ export function EventsListDialog({
                     {ev.type} • {ev.guests ?? 0} киши
                   </div>
                 </div>
-                <div className="text-xs text-muted-foreground">#{ev.id}</div>
+                <div className="text-xs text-muted-foreground">#</div>
               </button>
             ))
           )}

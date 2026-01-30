@@ -9,6 +9,7 @@ import { ru } from "date-fns/locale";
 import { AddEventDialog } from "./add-event-dialog";
 import { EventDetailDialog } from "./event-detail-dialog";
 import { EventsListDialog } from "./events-list-dialog";
+
 type EventDTO = {
   id: number;
   date: string;
@@ -23,69 +24,79 @@ type EventDTO = {
   notes: string;
   created_at: string;
 };
+
 const API = "http://127.0.0.1:8000";
 
 export function CalendarComponent() {
   const [openList, setOpenList] = React.useState(false);
   const [openDetail, setOpenDetail] = React.useState(false);
+  const [openCreate, setOpenCreate] = React.useState(false);
 
   const [events, setEvents] = React.useState<EventDTO[]>([]);
   const [selectedEvent, setSelectedEvent] = React.useState<EventDTO | null>(
     null
   );
 
-  function openEventDetails(ev: EventDTO) {
-    setSelectedEvent(ev);
-    setOpenDetail(true);
-  }
-
-  const [open, setOpen] = React.useState(false);
-
-  const [eventData, setEventData] = React.useState<any | null>(null);
-
   const [date, setDate] = React.useState<Date | undefined>(
-    new Date(new Date().getFullYear(), 1, 12)
+    new Date(
+      new Date().getFullYear(),
+      new Date().getMonth(),
+      new Date().getDate()
+    )
   );
+
   const [currentMonth, setCurrentMonth] = React.useState<Date>(
     new Date(new Date().getFullYear(), new Date().getMonth(), 1)
   );
-  const [openCreate, setOpenCreate] = React.useState(false);
+
   const [bookedDates, setBookedDates] = React.useState<Date[]>([]);
 
-  React.useEffect(() => {
-    async function loadBookedDates() {
-      try {
-        const res = await fetch(
-          "http://127.0.0.1:8000/api/events/booked-dates/"
-        );
-        const data = await res.json();
+  const bookedKeys = React.useMemo(() => {
+    return new Set(bookedDates.map((d) => format(d, "yyyy-MM-dd")));
+  }, [bookedDates]);
 
-        setBookedDates(data.dates.map((d: string) => new Date(d)));
-      } catch (err) {
-        console.error("Failed to load booked dates", err);
+  const loadBookedDates = React.useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/api/events/booked-dates/`);
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      function toLocalDate(input: string) {
+        // works for "YYYY-MM-DD" and also "YYYY-MM-DDTHH:mm:ssZ"
+        const datePart = input.slice(0, 10); // "2026-01-28"
+        const [y, m, d] = datePart.split("-").map(Number);
+        return new Date(y, m - 1, d, 12, 0, 0); // ✅ noon avoids DST/timezone shifts
       }
-    }
 
-    loadBookedDates();
+      const mapped = (data.dates ?? []).map(toLocalDate);
+      console.log("booked-dates mapped:", mapped);
+
+      setBookedDates(mapped);
+    } catch (err) {
+      console.error("Failed to load booked dates", err);
+    }
   }, []);
 
-  async function refreshDay() {
-    if (!date) return;
+  React.useEffect(() => {
+    loadBookedDates();
+  }, [loadBookedDates]);
+
+  async function refreshDay(d: Date) {
     const res = await fetch(
-      `${API}/api/events/by-date/?date=${format(date, "yyyy-MM-dd")}`
+      `${API}/api/events/by-date/?date=${format(d, "yyyy-MM-dd")}`
     );
     const data = await res.json();
     setEvents(data.events ?? []);
   }
+
   async function openForDate(d: Date) {
     setDate(d);
     setOpenList(true);
+    await refreshDay(d);
+  }
 
-    const res = await fetch(
-      `${API}/api/events/by-date/?date=${format(d, "yyyy-MM-dd")}`
-    );
-    const data = await res.json(); // { events: [] }
-    setEvents(data.events ?? []);
+  function openEventDetails(ev: EventDTO) {
+    setSelectedEvent(ev);
+    setOpenDetail(true);
   }
 
   return (
@@ -96,18 +107,15 @@ export function CalendarComponent() {
             locale={ru}
             mode="single"
             selected={date}
-            onSelect={(d) => {
-              if (!d) return;
-              setDate(d);
-            }}
-            onDayClick={(d) => {
-              openForDate(d);
-            }}
+            onSelect={(d) => d && setDate(d)}
+            onDayClick={(d) => openForDate(d)}
             month={currentMonth}
             onMonthChange={setCurrentMonth}
             fixedWeeks
             captionLayout="dropdown"
-            modifiers={{ booked: bookedDates }}
+            modifiers={{
+              booked: (day) => bookedKeys.has(format(day, "yyyy-MM-dd")),
+            }}
             modifiersClassNames={{
               booked: "[&>button]:line-through [&>button]:opacity-100",
             }}
@@ -115,29 +123,27 @@ export function CalendarComponent() {
           />
         </CardContent>
 
-        {/* Dialog #1: List */}
         <EventsListDialog
           open={openList}
           setOpen={setOpenList}
           date={date}
           events={events}
-          onPickEvent={(ev) => openEventDetails(ev)}
+          onPickEvent={openEventDetails}
           onAddEvent={() => {
-            setOpenList(false); // close list
-            setOpenCreate(true); // open create dialog
+            setOpenList(false);
+            setOpenCreate(true);
           }}
         />
 
-        {/* Dialog #2: Details */}
         <EventDetailDialog
           open={openDetail}
           setOpen={setOpenDetail}
           event={selectedEvent}
           date={date}
           onUpdated={async (updated) => {
-            // update selected + refresh list
             setSelectedEvent(updated);
-            await refreshDay();
+            if (date) await refreshDay(date);
+            await loadBookedDates();
           }}
         />
 
@@ -171,9 +177,11 @@ export function CalendarComponent() {
         open={openCreate}
         setOpen={setOpenCreate}
         date={date}
-        onCreated={() => {
-          // optional: refresh events list for this day
-          openForDate(date!); // or call your fetchEventsByDate()
+        onCreated={async () => {
+          if (!date) return;
+          await refreshDay(date);
+          await loadBookedDates();
+          setOpenList(true);
         }}
       />
     </>

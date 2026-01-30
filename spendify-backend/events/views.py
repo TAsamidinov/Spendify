@@ -69,8 +69,8 @@ def future_events_count(request):
 @api_view(["GET"])
 def booked_dates(request):
     dates = (
-        Event.objects
-        .values_list("date", flat=True)
+        Event.objects.values_list("date", flat=True)
         .distinct()
+        .order_by("date")
     )
-    return Response({"dates": dates})
+    return Response({"dates": [d.isoformat() for d in dates]})

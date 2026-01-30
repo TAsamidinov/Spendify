@@ -61,6 +61,13 @@ export function AddEventDialog({
 }) {
   const [form, setForm] = React.useState<EventForm>(emptyForm);
   const [saving, setSaving] = React.useState(false);
+  const isValid =
+    form.name.trim().length > 0 &&
+    form.type.trim().length > 0 &&
+    form.guests.trim().length > 0 &&
+    form.totalAmount.trim().length > 0 &&
+    form.deposit.trim().length > 0 &&
+    form.phone.trim().length > 0;
 
   // ✅ reset form each time dialog opens
   React.useEffect(() => {
@@ -118,21 +125,23 @@ export function AddEventDialog({
 
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="name">ФИО</Label>
+            <Label htmlFor="name">ФИО *</Label>
             <Input
               id="name"
               value={form.name}
               onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
               placeholder="Аят Кулуев Жийда"
+              required
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-2">
-              <Label>Тойдун түрү</Label>
+              <Label>Тойдун түрү *</Label>
               <Select
                 value={form.type}
                 onValueChange={(v) => setForm((p) => ({ ...p, type: v }))}
+                required
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Тандаңыз" />
@@ -149,20 +158,23 @@ export function AddEventDialog({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="guests">Адам саны</Label>
+              <Label htmlFor="guests">Адам саны *</Label>
               <Input
                 id="guests"
                 inputMode="numeric"
                 placeholder="250"
                 value={form.guests}
-                onChange={(e) => setForm((p) => ({ ...p, guests: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, guests: e.target.value }))
+                }
+                required
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-2">
-              <Label htmlFor="total">Акчасы</Label>
+              <Label htmlFor="total">Акчасы *</Label>
               <Input
                 id="total"
                 inputMode="numeric"
@@ -171,17 +183,21 @@ export function AddEventDialog({
                 onChange={(e) =>
                   setForm((p) => ({ ...p, totalAmount: e.target.value }))
                 }
+                required
               />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="deposit">Заклад</Label>
+              <Label htmlFor="deposit">Заклад *</Label>
               <Input
                 id="deposit"
                 inputMode="numeric"
                 placeholder="5000"
                 value={form.deposit}
-                onChange={(e) => setForm((p) => ({ ...p, deposit: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, deposit: e.target.value }))
+                }
+                required
               />
             </div>
           </div>
@@ -215,12 +231,15 @@ export function AddEventDialog({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="phone">Номери</Label>
+            <Label htmlFor="phone">Номери*</Label>
             <Input
               id="phone"
               placeholder="0 XXX XXX XXX"
               value={form.phone}
-              onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, phone: e.target.value }))
+              }
+              required
             />
           </div>
 
@@ -230,7 +249,9 @@ export function AddEventDialog({
               id="notes"
               placeholder="Мисалы: саат 12 башталат, тамак бизден..."
               value={form.notes}
-              onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, notes: e.target.value }))
+              }
             />
           </div>
         </div>
@@ -240,7 +261,7 @@ export function AddEventDialog({
             <Button variant="outline">Close</Button>
           </DialogClose>
 
-          <Button onClick={onSave} disabled={!date || saving}>
+          <Button onClick={onSave} disabled={!date || saving || !isValid}>
             {saving ? "Saving..." : "Save"}
           </Button>
         </DialogFooter>
