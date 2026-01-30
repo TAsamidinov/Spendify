@@ -65,3 +65,12 @@ def future_events_count(request):
     tomorrow = timezone.localdate() + timedelta(days=1)
     count = Event.objects.filter(date__gte=tomorrow).count()
     return Response({"count": count})
+
+@api_view(["GET"])
+def booked_dates(request):
+    dates = (
+        Event.objects
+        .values_list("date", flat=True)
+        .distinct()
+    )
+    return Response({"dates": dates})

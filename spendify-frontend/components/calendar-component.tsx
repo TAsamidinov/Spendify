@@ -50,14 +50,25 @@ export function CalendarComponent() {
     new Date(new Date().getFullYear(), new Date().getMonth(), 1)
   );
   const [openCreate, setOpenCreate] = React.useState(false);
-  const bookedDates = React.useMemo(
-    () =>
-      Array.from(
-        { length: 15 },
-        (_, i) => new Date(new Date().getFullYear(), 1, 12 + i)
-      ),
-    []
-  );
+  const [bookedDates, setBookedDates] = React.useState<Date[]>([]);
+
+  React.useEffect(() => {
+    async function loadBookedDates() {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/events/booked-dates/");
+        const data = await res.json();
+  
+        setBookedDates(
+          data.dates.map((d: string) => new Date(d))
+        );
+      } catch (err) {
+        console.error("Failed to load booked dates", err);
+      }
+    }
+  
+    loadBookedDates();
+  }, []);
+  
   async function refreshDay() {
     if (!date) return;
     const res = await fetch(
