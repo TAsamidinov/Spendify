@@ -1,7 +1,8 @@
 from django.urls import path
-from .views import event_by_date, save_event
+from .views import event_by_date, create_event, update_event
 
 urlpatterns = [
     path("by-date/", event_by_date),
-    path("save/", save_event),
+    path("create/", create_event),
+    path("<int:pk>/", update_event),  # PUT
 ]

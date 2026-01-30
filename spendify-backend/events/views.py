@@ -10,11 +10,12 @@ def event_by_date(request):
     if not date:
         return Response({"error": "date is required"}, status=400)
 
-    event = Event.objects.filter(date=date).first()
-    if not event:
-        return Response({"event": None}, status=200)  # ✅ always JSON
+    events = Event.objects.filter(date=date).order_by("created_at")
 
-    return Response(EventSerializer(event).data)
+    return Response(
+        {"events": EventSerializer(events, many=True).data},
+        status=200
+    )
 
 @api_view(["POST"])
 def save_event(request):
@@ -33,4 +34,26 @@ def save_event(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    return Response(serializer.errors, status=400)
+
+@api_view(["PUT"])
+def update_event(request, pk: int):
+    try:
+        event = Event.objects.get(pk=pk)
+    except Event.DoesNotExist:
+        return Response({"error": "not found"}, status=404)
+
+    serializer = EventSerializer(event, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=200)
+
+    return Response(serializer.errors, status=400)
+
+@api_view(["POST"])
+def create_event(request):
+    serializer = EventSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=400)

@@ -7,15 +7,45 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { addDays, format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { DialogCreateToi } from "./dialog-component";
+import { EventDetailDialog } from "./event-detail-dialog";
+import { EventsListDialog } from "./events-list-dialog";
+type EventDTO = {
+  id: number;
+  date: string;
+  name: string;
+  type: string;
+  guests: number;
+  total_amount: number | string;
+  deposit: number | string;
+  smoke_service: number | string;
+  banner_service: number | string;
+  phone: string;
+  notes: string;
+  created_at: string;
+};
+const API = "http://127.0.0.1:8000";
 
 export function CalendarComponent() {
-  const [date, setDate] = React.useState<Date | undefined>(
-    new Date(new Date().getFullYear(), 1, 12)
+  const [openList, setOpenList] = React.useState(false);
+  const [openDetail, setOpenDetail] = React.useState(false);
+
+  const [events, setEvents] = React.useState<EventDTO[]>([]);
+  const [selectedEvent, setSelectedEvent] = React.useState<EventDTO | null>(
+    null
   );
+
+  function openEventDetails(ev: EventDTO) {
+    setSelectedEvent(ev);
+    setOpenDetail(true);
+  }
+
   const [open, setOpen] = React.useState(false);
 
   const [eventData, setEventData] = React.useState<any | null>(null);
 
+  const [date, setDate] = React.useState<Date | undefined>(
+    new Date(new Date().getFullYear(), 1, 12)
+  );
   const [currentMonth, setCurrentMonth] = React.useState<Date>(
     new Date(new Date().getFullYear(), new Date().getMonth(), 1)
   );
@@ -28,27 +58,25 @@ export function CalendarComponent() {
       ),
     []
   );
-  async function openForDate(d: Date) {
-    setDate(d)
-    setOpen(true)
-  
-    try {
-      const res = await fetch(
-        `http://127.0.0.1:8000/api/events/by-date/?date=${format(d, "yyyy-MM-dd")}`
-      )
-  
-      if (!res.ok) {
-        setEventData(null)
-        return
-      }
-  
-      const data = await res.json() // ✅ event object directly
-      setEventData(data)            // ✅ set it directly
-    } catch (err) {
-      console.error(err)
-      setEventData(null)
-    }
+  async function refreshDay() {
+    if (!date) return;
+    const res = await fetch(
+      `${API}/api/events/by-date/?date=${format(date, "yyyy-MM-dd")}`
+    );
+    const data = await res.json();
+    setEvents(data.events ?? []);
   }
+  async function openForDate(d: Date) {
+    setDate(d);
+    setOpenList(true);
+
+    const res = await fetch(
+      `${API}/api/events/by-date/?date=${format(d, "yyyy-MM-dd")}`
+    );
+    const data = await res.json(); // { events: [] }
+    setEvents(data.events ?? []);
+  }
+
   return (
     <>
       <Card className="mx-auto w-[300px]">
@@ -72,6 +100,28 @@ export function CalendarComponent() {
             className="mx-auto p-0 [--cell-size:--spacing(9.5)]"
           />
         </CardContent>
+
+        {/* Dialog #1: List */}
+        <EventsListDialog
+          open={openList}
+          setOpen={setOpenList}
+          date={date}
+          events={events}
+          onPickEvent={(ev) => openEventDetails(ev)}
+          onRefresh={refreshDay}
+        />
+
+        {/* Dialog #2: Details */}
+        <EventDetailDialog
+          open={openDetail}
+          setOpen={setOpenDetail}
+          event={selectedEvent}
+          onUpdated={async (updated) => {
+            // update selected + refresh list
+            setSelectedEvent(updated);
+            await refreshDay();
+          }}
+        />
 
         <CardFooter className="flex flex-wrap gap-2 border-t">
           {[
