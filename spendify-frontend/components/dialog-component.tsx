@@ -148,7 +148,7 @@ export function DialogCreateToi({ open, setOpen, date, eventData }: any) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="суннот">Суннот той</SelectItem>
-                  <SelectItem value="баш кошуу">Үйлөнүү той</SelectItem>
+                  <SelectItem value="үйлөнүү той">Үйлөнүү той</SelectItem>
                   <SelectItem value="кыз узатуу">Кыз узатуу</SelectItem>
                   <SelectItem value="туулган күн">Туулган күн</SelectItem>
                   <SelectItem value="Корпоротив">Корпоротив</SelectItem>
