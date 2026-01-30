@@ -55,20 +55,20 @@ export function CalendarComponent() {
   React.useEffect(() => {
     async function loadBookedDates() {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/events/booked-dates/");
-        const data = await res.json();
-  
-        setBookedDates(
-          data.dates.map((d: string) => new Date(d))
+        const res = await fetch(
+          "http://127.0.0.1:8000/api/events/booked-dates/"
         );
+        const data = await res.json();
+
+        setBookedDates(data.dates.map((d: string) => new Date(d)));
       } catch (err) {
         console.error("Failed to load booked dates", err);
       }
     }
-  
+
     loadBookedDates();
   }, []);
-  
+
   async function refreshDay() {
     if (!date) return;
     const res = await fetch(
@@ -98,15 +98,18 @@ export function CalendarComponent() {
             selected={date}
             onSelect={(d) => {
               if (!d) return;
+              setDate(d);
+            }}
+            onDayClick={(d) => {
               openForDate(d);
             }}
             month={currentMonth}
             onMonthChange={setCurrentMonth}
             fixedWeeks
             captionLayout="dropdown"
-            modifiers={{ booked: bookedDates }} // only styling
+            modifiers={{ booked: bookedDates }}
             modifiersClassNames={{
-              booked: "[&>button]:line-through [&>button]:opacity-70", // looks booked but clickable
+              booked: "[&>button]:line-through [&>button]:opacity-100",
             }}
             className="mx-auto p-0 [--cell-size:--spacing(9.5)]"
           />
@@ -166,7 +169,7 @@ export function CalendarComponent() {
 
       <AddEventDialog
         open={openCreate}
-        setOpen={setOpenCreate} 
+        setOpen={setOpenCreate}
         date={date}
         onCreated={() => {
           // optional: refresh events list for this day
