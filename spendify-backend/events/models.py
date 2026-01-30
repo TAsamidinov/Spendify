@@ -4,7 +4,7 @@ class Event(models.Model):
     date = models.DateField()
     name = models.CharField(max_length=120)
     type = models.CharField(max_length=30)
-    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    guests = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     deposit = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     smoke_service = models.DecimalField(max_digits=12, decimal_places=2, default=0)

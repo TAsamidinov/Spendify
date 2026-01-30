@@ -14,6 +14,8 @@ export function CalendarComponent() {
   );
   const [open, setOpen] = React.useState(false);
 
+  const [eventData, setEventData] = React.useState<any | null>(null);
+
   const [currentMonth, setCurrentMonth] = React.useState<Date>(
     new Date(new Date().getFullYear(), new Date().getMonth(), 1)
   );
@@ -26,7 +28,27 @@ export function CalendarComponent() {
       ),
     []
   );
-
+  async function openForDate(d: Date) {
+    setDate(d)
+    setOpen(true)
+  
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:8000/api/events/by-date/?date=${format(d, "yyyy-MM-dd")}`
+      )
+  
+      if (!res.ok) {
+        setEventData(null)
+        return
+      }
+  
+      const data = await res.json() // ✅ event object directly
+      setEventData(data)            // ✅ set it directly
+    } catch (err) {
+      console.error(err)
+      setEventData(null)
+    }
+  }
   return (
     <>
       <Card className="mx-auto w-[300px]">
@@ -37,9 +59,7 @@ export function CalendarComponent() {
             selected={date}
             onSelect={(d) => {
               if (!d) return;
-              setDate(d);
-              setOpen(true); // OPEN DIALOG
-
+              openForDate(d);
             }}
             month={currentMonth}
             onMonthChange={setCurrentMonth}
@@ -78,7 +98,12 @@ export function CalendarComponent() {
           ))}
         </CardFooter>
       </Card>
-      <DialogCreateToi open={open} setOpen={setOpen} date={date} />
+      <DialogCreateToi
+        open={open}
+        setOpen={setOpen}
+        date={date}
+        eventData={eventData}
+      />
     </>
   );
 }
