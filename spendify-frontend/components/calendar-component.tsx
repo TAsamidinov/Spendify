@@ -101,7 +101,7 @@ export function CalendarComponent() {
 
   return (
     <>
-      <Card className="mx-auto w-[300px]">
+      <Card className="mx-auto w-[300px] rounded-sm">
         <CardContent className="flex justify-center p-0 pt-6">
           <Calendar
             locale={ru}
