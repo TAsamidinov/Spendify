@@ -24,7 +24,12 @@ type Props = {
   trigger: React.ReactNode;
 };
 
-export function RestoranIncomeDialogEdit({ row, date, onSave, trigger }: Props) {
+export function RestoranIncomeDialogEdit({
+  row,
+  date,
+  onSave,
+  trigger,
+}: Props) {
   const [open, setOpen] = React.useState(false);
 
   const [title, setTitle] = React.useState(row.title ?? "");
@@ -55,21 +60,21 @@ export function RestoranIncomeDialogEdit({ row, date, onSave, trigger }: Props) 
         <DialogHeader>
           <DialogTitle>Edit income</DialogTitle>
           <DialogDescription>
-            Editing{" "}
-            <span className="font-medium">{row.title || "—"}</span> for{" "}
+            Editing <span className="font-medium">{row.title || "—"}</span> for{" "}
             <span className="font-medium">
               {format(date, "d MMMM yyyy", { locale: ru })}
             </span>
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-2">
-          <div className="grid gap-2">
+        <div className="space-y-4">
+          <div className="space-y-2">
             <Label>Аталышы</Label>
+            
             <Input value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
 
-          <div className="grid gap-2">
+          <div className="space-y-2">
             <Label>Сумма</Label>
             <Input
               value={amount}
@@ -78,15 +83,15 @@ export function RestoranIncomeDialogEdit({ row, date, onSave, trigger }: Props) 
             />
           </div>
 
-          <div className="grid gap-2">
+          <div className="space-y-2">
             <Label>Эскертүү (optional)</Label>
             <Input value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-2">
           <Button variant="secondary" onClick={() => setOpen(false)}>
-            Cancel
+            fds
           </Button>
           <Button onClick={save}>Save</Button>
         </DialogFooter>

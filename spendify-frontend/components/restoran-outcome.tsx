@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { SquarePen, X } from "lucide-react";
-import { RestoranDialogEdit } from "./restoran-dialog-edit";
+import { RestoranDialogEdit } from "./restoran-outcome-dialog-edit";
 
 export type StaffRow = {
   id: string;
@@ -58,6 +58,23 @@ export function OutcomeTable({
   updateRow,
   removeRow,
 }: Props) {
+  const grand = React.useMemo(() => {
+    let totalSalary = 0;
+    let totalPaid = 0;
+
+    for (const worker of WORKER_ORDER) {
+      for (const r of rowsByWorker[worker]) {
+        totalSalary += toNumberSafe(r.salary);
+        totalPaid += toNumberSafe(r.paid);
+      }
+    }
+
+    return {
+      totalSalary,
+      totalPaid,
+      totalLeft: totalSalary - totalPaid,
+    };
+  }, [rowsByWorker]);
   return (
     <div className="w-full max-w-full overflow-x-auto rounded-sm border">
       <table className="min-w-full w-full text-sm table-fixed">
@@ -110,7 +127,7 @@ export function OutcomeTable({
                           {/* LEFT: info */}
                           <div className="min-w-0 flex-1">
                             {/* Row 1: name */}
-                            <div className="truncate font-medium">
+                            <div className="truncate font-medium ">
                               {r.name || "—"}
                             </div>
 
@@ -124,7 +141,9 @@ export function OutcomeTable({
                                 {money(toNumberSafe(r.paid))}
                               </div>
                               <div className="text-center text-sm font-medium">
-                                {money(toNumberSafe(r.salary) - toNumberSafe(r.paid))}
+                                {money(
+                                  toNumberSafe(r.salary) - toNumberSafe(r.paid)
+                                )}
                               </div>
 
                               {/* labels */}
@@ -146,7 +165,9 @@ export function OutcomeTable({
                               <RestoranDialogEdit
                                 row={r}
                                 date={selectedDate}
-                                onSave={(patch) => updateRow(worker, r.id, patch)}
+                                onSave={(patch) =>
+                                  updateRow(worker, r.id, patch)
+                                }
                                 trigger={
                                   <Button
                                     size="icon"
@@ -179,6 +200,21 @@ export function OutcomeTable({
             );
           })}
         </tbody>
+        <tfoot className="bg-muted/40">
+          <tr className="border-t">
+            <td colSpan={5} className="p-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Жалпы чыгаша</span>
+                <span className="font-semibold">{money(grand.totalPaid)}</span>
+              </div>
+
+              <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+                <span>Айлык: {money(grand.totalSalary)}</span>
+                <span>Калганы: {money(grand.totalLeft)}</span>
+              </div>
+            </td>
+          </tr>
+        </tfoot>
       </table>
     </div>
   );

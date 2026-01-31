@@ -29,7 +29,7 @@ const EMPTY: NewWorkerRow = { name: "", salary: "", paid: "" };
 
 export function RestoranDialog({ open, setOpen, title, onSave }: Props) {
   const [form, setForm] = React.useState<NewWorkerRow>(EMPTY);
-
+  
   React.useEffect(() => {
     if (open) setForm(EMPTY);
   }, [open]);

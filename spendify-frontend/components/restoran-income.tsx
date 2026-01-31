@@ -5,12 +5,15 @@ import { Button } from "@/components/ui/button";
 import { SquarePen, X } from "lucide-react";
 import { RestoranIncomeDialogEdit } from "./restoran-income-dialog-edit";
 
-import { RestoranIncomeDialog, type NewIncomeRow } from "./restoran-income-dialog";
+import {
+  RestoranIncomeDialog,
+  type NewIncomeRow,
+} from "./restoran-income-dialog";
 
 export type IncomeRow = {
   id: string;
-  title: string;   // e.g. Банкет, Чайхана, Доставка
-  amount: string;  // store as string like your salary/paid
+  title: string; // e.g. Банкет, Чайхана, Доставка
+  amount: string; // store as string like your salary/paid
   note?: string;
 };
 
@@ -32,7 +35,9 @@ type Props = {
   onRemoveRow: (id: string) => void;
   onUpdateRow: (id: string, patch: Partial<IncomeRow>) => void;
 };
-
+function uid() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
 export function IncomeTable({
   rows,
   selectedDate,
@@ -41,7 +46,6 @@ export function IncomeTable({
   onUpdateRow,
 }: Props) {
   const total = rows.reduce((acc, r) => acc + toNumberSafe(r.amount), 0);
-
   return (
     <div className="w-full max-w-full overflow-x-auto rounded-sm border">
       <table className="min-w-full w-full text-sm table-fixed">
@@ -56,7 +60,7 @@ export function IncomeTable({
             <td colSpan={2} className="p-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="font-semibold text-base truncate min-w-0">
-                  Доход
+                  Киреше
                 </div>
 
                 <Button size="sm" className="shrink-0" onClick={onCreateClick}>
@@ -76,44 +80,37 @@ export function IncomeTable({
           ) : (
             rows.map((r) => (
               <tr key={r.id} className="border-t bg-background">
-                <td className="p-3" colSpan={2}>
-                  <div className="flex gap-3">
-                    {/* LEFT */}
-                    <div className="min-w-0 flex-1">
-                      {/* Row 1: title */}
-                      <div className="truncate font-medium">{r.title || "—"}</div>
-
-                      {/* Row 2+3 aligned: amount + label */}
-                      <div className="mt-2 grid grid-cols-1 gap-1">
-                        <div className="text-center text-sm font-medium">
-                          {money(toNumberSafe(r.amount))}
-                        </div>
-                        <div className="text-center text-xs text-muted-foreground">
-                          сумма
-                        </div>
+                <td className="py-1 px-3" colSpan={2}>
+                  <div className="flex items-stretch gap-3">
+                    {/* LEFT TEXT: title + note (left-aligned, variable height) */}
+                    <div className="min-w-0 flex-1 flex flex-col justify-center">
+                      <div className="font-medium break-words">
+                        {r.title || "—"}
                       </div>
 
                       {r.note ? (
-                        <div className="mt-2 text-xs text-muted-foreground truncate">
+                        <div className="mt-1 text-xs text-muted-foreground break-words">
                           {r.note}
                         </div>
                       ) : null}
                     </div>
 
-                    {/* RIGHT actions centered */}
-                    <div className="self-stretch grid place-items-center">
+                    {/* AMOUNT: always vertically centered */}
+                    <div className="shrink-0 flex items-center justify-center w-[8ch]">
+                      <div className="text-sm font-medium tabular-nums text-center">
+                        {money(toNumberSafe(r.amount))}
+                      </div>
+                    </div>
+
+                    {/* ACTIONS: always centered */}
+                    <div className="shrink-0 flex items-center justify-center">
                       <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
                         <RestoranIncomeDialogEdit
                           row={r}
                           date={selectedDate}
                           onSave={(patch) => onUpdateRow(r.id, patch)}
                           trigger={
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              aria-label="Edit income"
-                              title="Edit"
-                            >
+                            <Button size="icon" variant="ghost">
                               <SquarePen />
                             </Button>
                           }
@@ -123,8 +120,6 @@ export function IncomeTable({
                           size="icon"
                           variant="ghost"
                           onClick={() => onRemoveRow(r.id)}
-                          aria-label="Remove income"
-                          title="Remove"
                         >
                           <X />
                         </Button>
@@ -137,10 +132,10 @@ export function IncomeTable({
           )}
 
           {/* TOTAL */}
-          <tr className="border-t bg-background">
+          <tr className="border-t bg-muted/40">
             <td colSpan={2} className="p-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Жалпы доход</span>
+                <span className="text-muted-foreground">Жалпы киреше</span>
                 <span className="font-semibold">{money(total)}</span>
               </div>
             </td>

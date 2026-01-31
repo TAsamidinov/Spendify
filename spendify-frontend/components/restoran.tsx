@@ -14,12 +14,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { RestoranDialog, type NewWorkerRow } from "./restoran-dialog";
+import { RestoranDialog, type NewWorkerRow } from "./restoran-outcome-dialog";
 import { SquarePen, X } from "lucide-react";
-import { RestoranDialogEdit } from "./restoran-dialog-edit";
+import { RestoranDialogEdit } from "./restoran-outcome-dialog-edit";
 import { OutcomeTable } from "./restoran-outcome";
 import { IncomeRow, IncomeTable } from "./restoran-income";
-import { NewIncomeRow } from "./restoran-income-dialog";
+import { NewIncomeRow, RestoranIncomeDialog } from "./restoran-income-dialog";
 
 type StaffRow = {
   id: string;
@@ -138,14 +138,13 @@ export default function RestaurantPayrollPage() {
   const years = Array.from({ length: 7 }, (_, i) =>
     String(now.getFullYear() - 3 + i)
   );
-  function uid() {
-    return Math.random().toString(36).slice(2) + Date.now().toString(36);
-  }
   const [view, setView] = React.useState<"income" | "outcome">("outcome");
   const [incomeRows, setIncomeRows] = React.useState<IncomeRow[]>([]);
   const [openIncomeCreate, setOpenIncomeCreate] = React.useState(false);
 
   function addIncomeRow(data: NewIncomeRow) {
+    console.log("ADDING INCOME", data);
+
     setIncomeRows((prev) => [
       ...prev,
       { id: uid(), title: data.title, amount: data.amount, note: data.note },
@@ -270,6 +269,12 @@ export default function RestaurantPayrollPage() {
         setOpen={setOpenCreate}
         title={`Кошуу: ${WORKERS[createWorkerKey].title}`}
         onSave={(row) => addRowWithData(createWorkerKey, row)}
+      />
+      <RestoranIncomeDialog
+        open={openIncomeCreate}
+        setOpen={setOpenIncomeCreate}
+        title="Кошуу: Киреше"
+        onSave={addIncomeRow}
       />
     </div>
   );

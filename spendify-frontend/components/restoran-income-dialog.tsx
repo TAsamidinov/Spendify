@@ -38,7 +38,10 @@ export function RestoranIncomeDialog({ open, setOpen, title, onSave }: Props) {
     setForm({ title: "", amount: "", note: "" });
   }, [open]);
 
-  function save() {
+  const canSave =
+    form.title.trim().length > 0 && form.amount.trim().length > 0;
+
+  function handleSave() {
     onSave({
       title: form.title.trim(),
       amount: form.amount.trim(),
@@ -51,32 +54,38 @@ export function RestoranIncomeDialog({ open, setOpen, title, onSave }: Props) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-[420px]">
         <DialogHeader>
-          <DialogTitle>{title ?? "Кошуу: Доход"}</DialogTitle>
-          <DialogDescription>Доход маалыматтарын толтуруңуз.</DialogDescription>
+          <DialogTitle>{title ?? "Кошуу: Киреше"}</DialogTitle>
+          <DialogDescription>
+            Киреше маалыматтарын толтуруңуз.
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-2">
-          <div className="grid gap-2">
+        <div className="space-y-4">
+          <div className="space-y-2">
             <Label>Аталышы</Label>
             <Input
               value={form.title}
-              onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, title: e.target.value }))
+              }
               placeholder="Мисалы: Банкет"
             />
           </div>
 
-          <div className="grid gap-2">
+          <div className="space-y-2">
             <Label>Сумма</Label>
             <Input
               value={form.amount}
-              onChange={(e) => setForm((p) => ({ ...p, amount: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, amount: e.target.value }))
+              }
               inputMode="decimal"
               placeholder="0"
             />
           </div>
 
-          <div className="grid gap-2">
-            <Label>Эскертүү (optional)</Label>
+          <div className="space-y-2">
+            <Label>Эскертүү (милдеттүү эмес)</Label>
             <Input
               value={form.note ?? ""}
               onChange={(e) => setForm((p) => ({ ...p, note: e.target.value }))}
@@ -85,11 +94,13 @@ export function RestoranIncomeDialog({ open, setOpen, title, onSave }: Props) {
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-2">
           <Button variant="secondary" onClick={() => setOpen(false)}>
-            Cancel
+            Жабуу
           </Button>
-          <Button onClick={save}>Save</Button>
+          <Button onClick={handleSave} disabled={!canSave}>
+            Сактоо
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
