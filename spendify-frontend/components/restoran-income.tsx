@@ -46,6 +46,7 @@ export function IncomeTable({
   onUpdateRow,
 }: Props) {
   const total = rows.reduce((acc, r) => acc + toNumberSafe(r.amount), 0);
+  
   return (
     <div className="w-full max-w-full overflow-x-auto rounded-sm border">
       <table className="min-w-full w-full text-sm table-fixed">
