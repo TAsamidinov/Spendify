@@ -21,6 +21,8 @@ import { OutcomeTable } from "./restoran-outcome";
 import { IncomeRow, IncomeTable } from "./restoran-income";
 import { NewIncomeRow, RestoranIncomeDialog } from "./restoran-income-dialog";
 
+const API_BASE = "http://127.0.0.1:8000/api/events";
+
 type StaffRow = {
   id: string;
   name: string;
@@ -38,16 +40,28 @@ const WORKERS = {
   other: { title: "Другое", addLabel: "Кошуу" },
 } as const;
 
-type WorkerKey = keyof typeof WORKERS;
-
-const WORKER_ORDER: WorkerKey[] = [
+const WORKER_KEYS = [
   "chefs",
   "musicians",
   "waiters",
   "dishwashers",
   "florewashers",
   "other",
-];
+] as const;
+
+type WorkerKey = (typeof WORKER_KEYS)[number];
+type NewOutcomeRow = {
+  worker_type: WorkerKey;
+  name: string;
+  salary: string;
+  paid: string;
+};
+
+function toWorkerKey(v: string): WorkerKey {
+  return (WORKER_KEYS as readonly string[]).includes(v)
+    ? (v as WorkerKey)
+    : "other";
+}
 
 function uid() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -99,12 +113,14 @@ export default function RestaurantPayrollPage() {
   }
   React.useEffect(() => {
     async function loadOutcome() {
-      const res = await fetch(`/api/restoran/outcome/?date=${selectedDateLabel}`);
+      const res = await fetch(
+        `/api/restoran/outcome/?date=${selectedDateLabel}`
+      );
       if (!res.ok) return;
-  
+
       const data = await res.json();
       const items = Array.isArray(data) ? data : data.results ?? [];
-  
+
       const next: Record<WorkerKey, StaffRow[]> = {
         chefs: [],
         musicians: [],
@@ -113,11 +129,11 @@ export default function RestaurantPayrollPage() {
         florewashers: [],
         other: [],
       };
-  
+
       for (const x of items) {
         const key = (x.worker_type as WorkerKey) ?? "other";
         if (!next[key]) continue;
-  
+
         next[key].push({
           id: String(x.id),
           name: x.name ?? "",
@@ -125,10 +141,10 @@ export default function RestaurantPayrollPage() {
           paid: String(x.paid ?? "0"),
         });
       }
-  
+
       setRowsByWorker(next);
     }
-  
+
     loadOutcome();
   }, [selectedDateLabel]);
 
@@ -138,10 +154,12 @@ export default function RestaurantPayrollPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
     });
-  
+
     if (!res.ok) return;
-  
-    setIncomeRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+
+    setIncomeRows((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, ...patch } : r))
+    );
   }
 
   function addRowWithData(worker: WorkerKey, data: NewWorkerRow) {
@@ -167,7 +185,6 @@ export default function RestaurantPayrollPage() {
       [worker]: prev[worker].map((r) => (r.id === id ? { ...r, ...patch } : r)),
     }));
   }
-  
 
   function workerTotals(worker: WorkerKey) {
     const rows = rowsByWorker[worker];
@@ -189,54 +206,173 @@ export default function RestaurantPayrollPage() {
   const [incomeRows, setIncomeRows] = React.useState<IncomeRow[]>([]);
   const [openIncomeCreate, setOpenIncomeCreate] = React.useState(false);
 
-  function addIncomeRow(data: NewIncomeRow) {
-    console.log("ADDING INCOME", data);
+  const API_BASE = "http://127.0.0.1:8000/api/events";
 
+  async function addIncomeRow(data: NewIncomeRow) {
+    const res = await fetch(`${API_BASE}/income/create/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        date: selectedDateLabel, // "YYYY-MM-DD"
+        title: data.title,
+        amount: Number(data.amount.replace(/,/g, "")) || 0,
+        note: data.note ?? "",
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      console.error("Income save failed:", res.status, err);
+      return;
+    }
+
+    const created = await res.json();
     setIncomeRows((prev) => [
       ...prev,
-      { id: uid(), title: data.title, amount: data.amount, note: data.note },
+      {
+        id: String(created.id),
+        title: created.title,
+        amount: String(created.amount),
+        note: created.note ?? "",
+      },
     ]);
   }
 
   async function removeIncomeRow(id: string) {
-    const res = await fetch(`/api/restoran/income/${id}/`, { method: "DELETE" });
+    const res = await fetch(`/api/restoran/income/${id}/`, {
+      method: "DELETE",
+    });
     if (!res.ok) return;
-  
+
     setIncomeRows((prev) => prev.filter((r) => r.id !== id));
   }
-  
+  async function addOutcomeRow(data: {
+    worker_type: string;
+    name: string;
+    salary: string;
+    paid: string;
+  }) {
+    const res = await fetch(`${API_BASE}/outcome/create/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        date: selectedDateLabel, // YYYY-MM-DD
+        worker_type: data.worker_type,
+        name: data.name,
+        salary: Number(data.salary.replace(/,/g, "")) || 0,
+        paid: Number(data.paid.replace(/,/g, "")) || 0,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      console.error("Outcome save failed:", res.status, err);
+      return;
+    }
+
+    const created = await res.json();
+
+    const key = toWorkerKey(data.worker_type);
+
+    setRowsByWorker((prev) => ({
+      ...prev,
+      [key]: [
+        ...prev[key],
+        {
+          id: String(created.id),
+          name: created.name,
+          salary: String(created.salary),
+          paid: String(created.paid),
+        },
+      ],
+    }));
+  }
+  async function loadOutcome(dateLabel: string) {
+    const res = await fetch(`${API_BASE}/outcome/by-date/?date=${dateLabel}`);
+    if (!res.ok) return;
+
+    const data = await res.json();
+    const rows = data.rows ?? [];
+
+    // regroup by worker_type
+    const grouped: Record<WorkerKey, StaffRow[]> = {
+      chefs: [],
+      musicians: [],
+      waiters: [],
+      dishwashers: [],
+      florewashers: [],
+      other: [],
+    };
+
+    for (const r of rows) {
+      const key = (r.worker_type as WorkerKey) ?? "other";
+      grouped[key].push({
+        id: String(r.id),
+        name: r.name,
+        salary: String(r.salary),
+        paid: String(r.paid),
+      });
+    }
+
+    setRowsByWorker(grouped);
+  }
+  async function updateOutcomeRow(
+    id: string,
+    patch: Partial<{ salary: string; paid: string }>
+  ) {
+    const res = await fetch(`${API_BASE}/outcome/${id}/`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...(patch.salary && { salary: Number(patch.salary.replace(/,/g, "")) }),
+        ...(patch.paid && { paid: Number(patch.paid.replace(/,/g, "")) }),
+      }),
+    });
+
+    if (!res.ok) {
+      console.error("Outcome update failed", await res.text());
+    }
+  }
+  async function removeOutcomeRow(id: string) {
+    const res = await fetch(`${API_BASE}/outcome/${id}/delete/`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      console.error("Outcome delete failed", await res.text());
+    }
+  }
+
   React.useEffect(() => {
     setSelectedDate(new Date(Number(year), Number(month) - 1, Number(day)));
   }, [day, month, year]);
 
-  React.useEffect(() => {
-    async function loadIncome() {
-      const res = await fetch(`/api/restoran/income/?date=${selectedDateLabel}`);
-      if (!res.ok) return;
-  
-      const data = await res.json();
-      const items = Array.isArray(data) ? data : data.results ?? [];
-  
-      setIncomeRows(
-        items.map((x: any) => ({
-          id: String(x.id),
-          title: x.title ?? "",
-          amount: String(x.amount ?? "0"),
-          note: x.note ?? "",
-        }))
-      );
-    }
-  
-    loadIncome();
-  }, [selectedDateLabel]);
+  async function loadIncome(dateLabel: string) {
+    const res = await fetch(`${API_BASE}/income/by-date/?date=${dateLabel}`);
+    if (!res.ok) return;
+
+    const data = await res.json();
+    const rows = data.rows ?? [];
+
+    setIncomeRows(
+      rows.map((x: any) => ({
+        id: String(x.id),
+        title: x.title ?? "",
+        amount: String(x.amount ?? "0"),
+        note: x.note ?? "",
+      }))
+    );
+  }
   React.useEffect(() => {
     async function loadOutcome() {
-      const res = await fetch(`/api/restoran/outcome/?date=${selectedDateLabel}`);
+      const res = await fetch(
+        `/api/restoran/outcome/?date=${selectedDateLabel}`
+      );
       if (!res.ok) return;
-  
+
       const data = await res.json();
       const items = Array.isArray(data) ? data : data.results ?? [];
-  
+
       const next: Record<WorkerKey, StaffRow[]> = {
         chefs: [],
         musicians: [],
@@ -245,11 +381,11 @@ export default function RestaurantPayrollPage() {
         florewashers: [],
         other: [],
       };
-  
+
       for (const x of items) {
         const key = (x.worker_type as WorkerKey) ?? "other";
         if (!next[key]) continue;
-  
+
         next[key].push({
           id: String(x.id),
           name: x.name ?? "",
@@ -257,10 +393,10 @@ export default function RestaurantPayrollPage() {
           paid: String(x.paid ?? "0"),
         });
       }
-  
+
       setRowsByWorker(next);
     }
-  
+
     loadOutcome();
   }, [selectedDateLabel]);
   return (
