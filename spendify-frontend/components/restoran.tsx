@@ -17,6 +17,9 @@ import {
 import { RestoranDialog, type NewWorkerRow } from "./restoran-dialog";
 import { SquarePen, X } from "lucide-react";
 import { RestoranDialogEdit } from "./restoran-dialog-edit";
+import { OutcomeTable } from "./restoran-outcome";
+import { IncomeRow, IncomeTable } from "./restoran-income";
+import { NewIncomeRow } from "./restoran-income-dialog";
 
 type StaffRow = {
   id: string;
@@ -30,6 +33,8 @@ const WORKERS = {
   musicians: { title: "Музыкант", addLabel: "Кошуу" },
   waiters: { title: "Официант", addLabel: "Кошуу" },
   dishwashers: { title: "Идиш жуучу", addLabel: "Кошуу" },
+  florewashers: { title: "Пол жуучу", addLabel: "Кошуу" },
+
   other: { title: "Другое", addLabel: "Кошуу" },
 } as const;
 
@@ -40,6 +45,7 @@ const WORKER_ORDER: WorkerKey[] = [
   "musicians",
   "waiters",
   "dishwashers",
+  "florewashers",
   "other",
 ];
 
@@ -72,6 +78,7 @@ export default function RestaurantPayrollPage() {
     musicians: [],
     waiters: [],
     dishwashers: [],
+    florewashers: [],
     other: [],
   });
 
@@ -131,6 +138,29 @@ export default function RestaurantPayrollPage() {
   const years = Array.from({ length: 7 }, (_, i) =>
     String(now.getFullYear() - 3 + i)
   );
+  function uid() {
+    return Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
+  const [view, setView] = React.useState<"income" | "outcome">("outcome");
+  const [incomeRows, setIncomeRows] = React.useState<IncomeRow[]>([]);
+  const [openIncomeCreate, setOpenIncomeCreate] = React.useState(false);
+
+  function addIncomeRow(data: NewIncomeRow) {
+    setIncomeRows((prev) => [
+      ...prev,
+      { id: uid(), title: data.title, amount: data.amount, note: data.note },
+    ]);
+  }
+
+  function removeIncomeRow(id: string) {
+    setIncomeRows((prev) => prev.filter((r) => r.id !== id));
+  }
+
+  function updateIncomeRow(id: string, patch: Partial<IncomeRow>) {
+    setIncomeRows((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, ...patch } : r))
+    );
+  }
 
   return (
     <div className="mx-auto max-w-6xl p-4">
@@ -182,142 +212,55 @@ export default function RestaurantPayrollPage() {
             </Select>
           </div>
 
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setView("income")}
+              className={[
+                "h-10 rounded-md border text-sm font-medium transition",
+                "flex items-center justify-center",
+                view === "income"
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background hover:bg-muted",
+              ].join(" ")}
+            >
+              Киреше
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setView("outcome")}
+              className={[
+                "h-10 rounded-md border text-sm font-medium transition",
+                "flex items-center justify-center",
+                view === "outcome"
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background hover:bg-muted",
+              ].join(" ")}
+            >
+              Чыгаша
+            </button>
+          </div>
+
           <Separator />
 
-          {/* One big table */}
-
-          <div className="w-full max-w-full overflow-x-auto rounded-sm border">
-            <table className="min-w-full w-full text-sm table-fixed">
-              <colgroup>
-                <col className="w-[40%]" />
-                <col className="w-[15%]" />
-                <col className="w-[15%]" />
-                <col className="w-[15%]" />
-                <col className="w-[15%]" />
-              </colgroup>
-              <tbody>
-                {WORKER_ORDER.map((worker) => {
-                  const cfg = WORKERS[worker];
-                  const totals = workerTotals(worker);
-                  const rows = rowsByWorker[worker];
-
-                  return (
-                    <React.Fragment key={worker}>
-                      {/* SECTION HEADER (Title left, Button right) */}
-                      <tr className="border-t bg-muted/100">
-                        <td colSpan={5} className="p-3">
-                          <div className="flex justify-between items-center gap-2">
-                            <div className="font-semibold text-base truncate min-w-0">
-                              {cfg.title}
-                            </div>
-
-                            <Button
-                              size="sm"
-                              className="shrink-100"
-                              onClick={() => openCreateDialog(worker)}
-                            >
-                              {cfg.addLabel}
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-
-                      {/* SECTION ROWS */}
-                      {rows.length === 0 ? (
-                        <tr className="border-t bg-background">
-                          <td colSpan={5} className="p-3 text-muted-foreground">
-                            Эч нерсе жок.
-                          </td>
-                        </tr>
-                      ) : (
-                        rows.map((r) => {
-                          const left =
-                            toNumberSafe(r.salary) - toNumberSafe(r.paid);
-
-                          return (
-                            <tr key={r.id} className="border-t bg-background">
-                              <td className="p-3" colSpan={5}>
-                                <div className="flex gap-3">
-                                  {/* LEFT: info */}
-                                  <div className="min-w-0 flex-1">
-                                    {/* Row 1: name */}
-                                    <div className="truncate font-medium">
-                                      {r.name || "—"}
-                                    </div>
-
-                                    {/* Rows 2 + 3: values + labels aligned */}
-                                    <div className="mt-2 grid grid-cols-3 gap-3">
-                                      {/* Row 2: values */}
-                                      <div className="text-center text-sm font-medium">
-                                        {money(toNumberSafe(r.salary))}
-                                      </div>
-                                      <div className="text-center text-sm font-medium">
-                                        {money(toNumberSafe(r.paid))}
-                                      </div>
-                                      <div className="text-center text-sm font-medium">
-                                        {money(
-                                          toNumberSafe(r.salary) -
-                                            toNumberSafe(r.paid)
-                                        )}
-                                      </div>
-
-                                      {/* Row 3: labels */}
-                                      <div className="text-center text-md text-muted-foreground">
-                                        айлык
-                                      </div>
-                                      <div className="text-center text-xs text-muted-foreground">
-                                        алганы
-                                      </div>
-                                      <div className="text-center text-xs text-muted-foreground">
-                                        калганы
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* RIGHT: actions (centered both ways) */}
-                                  <div className="self-stretch grid place-items-center">
-                                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-                                      <RestoranDialogEdit
-                                        row={r}
-                                        onSave={(patch) =>
-                                          updateRow(worker, r.id, patch)
-                                        }
-                                        date={selectedDate}
-                                        trigger={
-                                          <Button
-                                            size="icon"
-                                            variant="ghost"
-                                            aria-label="Edit row"
-                                            title="Edit"
-                                          >
-                                            <SquarePen />
-                                          </Button>
-                                        }
-                                      />
-
-                                      <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        onClick={() => removeRow(worker, r.id)}
-                                        aria-label="Remove row"
-                                        title="Remove"
-                                      >
-                                        <X />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          {view === "outcome" ? (
+            <OutcomeTable
+              rowsByWorker={rowsByWorker}
+              selectedDate={selectedDate}
+              openCreateDialog={openCreateDialog}
+              updateRow={updateRow}
+              removeRow={removeRow}
+            />
+          ) : (
+            <IncomeTable
+              rows={incomeRows}
+              selectedDate={selectedDate}
+              onCreateClick={() => setOpenIncomeCreate(true)}
+              onRemoveRow={removeIncomeRow}
+              onUpdateRow={updateIncomeRow}
+            />
+          )}
         </CardContent>
       </Card>
 
